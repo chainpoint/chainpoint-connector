@@ -1,7 +1,6 @@
 import { Worker, Plugins, Scheduler, Queue } from "node-resque";
 import chainpoint from 'chainpoint-js'
 import chpParse from 'chainpoint-parse'
-import cpb from 'chainpoint-binary'
 import url from 'url';
 
 class ChainpointConnector {
@@ -46,7 +45,7 @@ class ChainpointConnector {
                     try {
                         proof = await chainpoint.getProofs(proofHandles)
                         if (proof.length == 1) {
-                            let result = chainpointParse.parse(proof[0])
+                            let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('cal_anchor_branch')){
                                 await queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [time, id, proofHandle, cb]);
@@ -75,7 +74,7 @@ class ChainpointConnector {
                     try {
                         proof = await chainpoint.getProofs(proofHandles)
                         if (proof.length == 1) {
-                            let result = chainpointParse.parse(proof[0])
+                            let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
                                 await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [time, id, proofHandle, cb]);
@@ -95,11 +94,11 @@ class ChainpointConnector {
         }
     }
 
-    submitHashes(hashesObj, cb) {
+    async submitHashes(hashesObj, cb) {
 
     }
 
-    async submitHashes(id, hash, cb) {
+    async submitHashe(id, hash, cb) {
         let proofHandle
         try{
            proofHandle = await chainpoint.submitHashes([hash])
