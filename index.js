@@ -3,7 +3,7 @@ import chainpoint from 'chainpoint-js'
 import chpParse from 'chainpoint-parse'
 import url from 'url';
 
-class ChainpointConnector {
+export default class ChainpointConnector {
 
     constructor(redisUri, redisPassword, calWait=140000, btcWait=5400000) {
         const redisUrl = url.parse(redisUri)
@@ -109,5 +109,3 @@ class ChainpointConnector {
         await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [Date.now(), id, proofHandle, cb]);
     }
 }
-
-module.exports = ChainpointConnector
