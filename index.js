@@ -50,14 +50,14 @@ class ChainpointConnector {
                             if (!strResult.includes('cal_anchor_branch')){
                                 await queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [time, id, proofHandle, cb]);
                             } else {
-                                callback(null, id, proof)
+                                callback(null, time, id, proof)
                             }
                         }
                         if (time - Date.parse(result.hash_received) > this.hourMs) {
                             throw 'timed out attempting to retrieve calendar proof'
                         }
                     } catch(error){
-                        callback(error, id, null)
+                        callback(error, time, id, null)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -79,14 +79,14 @@ class ChainpointConnector {
                             if (!strResult.includes('btc_anchor_branch')){
                                 await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [time, id, proofHandle, cb]);
                             } else {
-                                callback(null, id, proofs)
+                                callback(null, time, id, proofs)
                             }
                         }
                         if (time - Date.parse(result.hash_received) > this.dayMs) {
                             throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
-                        callback(error, id, null)
+                        callback(error, time, id, null)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -98,12 +98,12 @@ class ChainpointConnector {
 
     }
 
-    async submitHashe(id, hash, cb) {
+    async submitHash(id, hash, cb) {
         let proofHandle
         try{
            proofHandle = await chainpoint.submitHashes([hash])
         } catch (error) {
-           cb(error, id, null)
+           cb(error, Date.now(), id, null)
         }
         await queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [Date.now(), id, proofHandle, cb]);
         await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [Date.now(), id, proofHandle, cb]);
