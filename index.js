@@ -80,14 +80,14 @@ export default class ChainpointConnector {
         }
         this.worker = new Worker(
             { connection: this.connectionDetails, queues: ["chp"] },
-            jobs
+            this.jobs
         );
         this.worker.connect();
         this.worker.start();
         this.scheduler = new Scheduler({ connection: this.connectionDetails });
         await this.scheduler.connect();
         this.scheduler.start();
-        this.queue = new Queue({ connection: this.connectionDetails }, jobs);
+        this.queue = new Queue({ connection: this.connectionDetails }, this.jobs);
         await this.queue.connect()
     }
 
