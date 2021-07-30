@@ -22,19 +22,7 @@ export default class ChainpointConnector {
     }
 
     async connect(){
-        this.worker = new Worker(
-            { connection: this.connectionDetails, queues: ["chp"] },
-            jobs
-        );
-        this.worker.connect();
-        this.worker.start();
-        this.scheduler = new Scheduler({ connection: this.connectionDetails });
-        await this.scheduler.connect();
-        this.scheduler.start();
-        this.queue = new Queue({ connection: this.connectionDetails }, jobs);
-        await this.queue.connect()
-
-        this.calJob = {
+        this.jobs = {
             getCalProof: {
                 plugins: [Plugins.JobLock],
                 pluginOptions: {
@@ -62,8 +50,6 @@ export default class ChainpointConnector {
                     }
                 },
             },
-        }
-        this.btcJob = {
             getBtcProof: {
                 plugins: [Plugins.JobLock],
                 pluginOptions: {
@@ -92,6 +78,17 @@ export default class ChainpointConnector {
                 },
             },
         }
+        this.worker = new Worker(
+            { connection: this.connectionDetails, queues: ["chp"] },
+            jobs
+        );
+        this.worker.connect();
+        this.worker.start();
+        this.scheduler = new Scheduler({ connection: this.connectionDetails });
+        await this.scheduler.connect();
+        this.scheduler.start();
+        this.queue = new Queue({ connection: this.connectionDetails }, jobs);
+        await this.queue.connect()
     }
 
     async submitHashes(hashesObj, cb) {
