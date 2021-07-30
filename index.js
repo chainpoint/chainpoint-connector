@@ -1,19 +1,15 @@
 import { Worker, Plugins, Scheduler, Queue } from "node-resque";
 import chainpoint from 'chainpoint-js'
 import chpParse from 'chainpoint-parse'
-import url from 'url';
 
 export default class ChainpointConnector {
 
-    constructor(redisUri, redisPassword, calWait=140000, btcWait=5400000) {
-        const redisUrl = url.parse(redisUri)
-        console.log(redisUrl.host)
-        console.log(redisUrl.port)
+    constructor(redisHost="redis", redisPort=6379, redisPassword=null, calWait=140000, btcWait=5400000) {
         this.connectionDetails = {
             pkg: "ioredis",
-            host: redisUrl.host,
+            host: redisHost,
             password: redisPassword,
-            port: redisUrl.port,
+            port: redisPort,
             database: 0,
             namespace: 'chp-resque',
         }
