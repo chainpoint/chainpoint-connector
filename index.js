@@ -34,7 +34,7 @@ export default class ChainpointConnector {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('cal_anchor_branch')){
-                                await queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [time, id, proofHandle, cb]);
+                                await this.queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [time, id, proofHandle, cb]);
                             } else {
                                 callback(null, time, id, proof)
                             }
@@ -61,7 +61,7 @@ export default class ChainpointConnector {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
-                                await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [time, id, proofHandle, cb]);
+                                await this.queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [time, id, proofHandle, cb]);
                             } else {
                                 callback(null, time, id, proofs)
                             }
@@ -100,7 +100,7 @@ export default class ChainpointConnector {
         } catch (error) {
            cb(error, Date.now(), id, null)
         }
-        await queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [Date.now(), id, proofHandle, cb]);
-        await queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [Date.now(), id, proofHandle, cb]);
+        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "calJob", [Date.now(), id, proofHandle, cb]);
+        await this.queue.enqueueIn(this.btcWaitTime, "chp", "btcJob", [Date.now(), id, proofHandle, cb]);
     }
 }
