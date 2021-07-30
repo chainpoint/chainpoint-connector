@@ -7,6 +7,8 @@ export default class ChainpointConnector {
 
     constructor(redisUri, redisPassword, calWait=140000, btcWait=5400000) {
         const redisUrl = url.parse(redisUri)
+        console.log(redisUrl.host)
+        console.log(redisUrl.port)
         this.connectionDetails = {
             pkg: "ioredis",
             host: redisUrl.host,
