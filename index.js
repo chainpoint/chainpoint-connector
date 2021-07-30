@@ -80,7 +80,7 @@ export default class ChainpointConnector {
             { connection: this.connectionDetails, queues: ["chp"] },
             this.jobs
         );
-        this.worker.connect();
+        await this.worker.connect();
         this.worker.start();
         this.scheduler = new Scheduler({ connection: this.connectionDetails });
         await this.scheduler.connect();
