@@ -29,13 +29,17 @@ export default class ChainpointConnector {
                 perform: async (time, id, proofHandles) => {
                     let proofs, result
                     let failed = false
-                  //  try {
+                    try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
-                            result = chpParse.parse(proof)
-                            let strResult = JSON.stringify(result)
-                            if (!strResult.includes('cal_anchor_branch')){
-                                failed = true
+                            try {
+                                result = chpParse.parse(proof)
+                                let strResult = JSON.stringify(result)
+                                if (!strResult.includes('cal_anchor_branch')) {
+                                    failed = true
+                                }
+                            } catch(error) {
+                                console.log('proofs error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                             }
                         })
                         if (failed) {
@@ -47,10 +51,10 @@ export default class ChainpointConnector {
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
                             throw new Error('timed out attempting to retrieve cal proof')
                         }
-/*                    } catch(error){
+                    } catch(error){
                         this.callback(error, time, id, proofs)
                         console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
-                    }*/
+                    }
                 },
             },
             getBtcProof: {
