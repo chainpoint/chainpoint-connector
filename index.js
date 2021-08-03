@@ -42,13 +42,14 @@ export default class ChainpointConnector {
                             await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandles]);
                         } else {
                             this.callback(null, time, id, proofs)
+                            return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
                             throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
-                        console.log(`error: ${JSON.stringify(error.message)}`)
+                        console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                     }
                 },
             },
@@ -73,13 +74,14 @@ export default class ChainpointConnector {
                             await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandles]);
                         } else {
                             this.callback(null, time, id, proofs)
+                            return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.dayMs) {
                             throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
-                        console.log(`error: ${JSON.stringify(error.message)}`)
+                        console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                     }
                 },
             },
