@@ -27,11 +27,11 @@ export default class ChainpointConnector {
                     JobLock: {reEnqueue: true},
                 },
                 perform: async (time, id, proofHandle) => {
-                    let proof
+                    let proof, result
                     try {
                         proof = await chainpoint.getProofs(proofHandle)
                         if (proof.length == 1) {
-                            let result = chpParse.parse(proof[0])
+                            result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('cal_anchor_branch')){
                                 await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandle]);
@@ -54,16 +54,16 @@ export default class ChainpointConnector {
                     JobLock: {reEnqueue: true},
                 },
                 perform: async (time, id, proofHandle) => {
-                    let proof
+                    let proof, result
                     try {
                         proof = await chainpoint.getProofs(proofHandle)
                         if (proof.length == 1) {
-                            let result = chpParse.parse(proof[0])
+                            result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
                                 await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandle]);
                             } else {
-                                this.callback(null, time, id, proofs)
+                                this.callback(null, time, id, proof)
                             }
                         }
                         if (time - Date.parse(result.hash_received) > this.dayMs) {
