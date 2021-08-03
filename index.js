@@ -45,7 +45,7 @@ export default class ChainpointConnector {
                             return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
-                            throw 'timed out attempting to retrieve btc proof'
+                            throw new Error('timed out attempting to retrieve cal proof')
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
@@ -77,7 +77,7 @@ export default class ChainpointConnector {
                             return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.dayMs) {
-                            throw 'timed out attempting to retrieve btc proof'
+                            throw new Error('timed out attempting to retrieve btc proof')
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
