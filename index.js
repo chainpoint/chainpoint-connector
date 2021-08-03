@@ -26,24 +26,28 @@ export default class ChainpointConnector {
                 pluginOptions: {
                     JobLock: {reEnqueue: true},
                 },
-                perform: async (time, id, proofHandle) => {
-                    let proof, result
+                perform: async (time, id, proofHandles) => {
+                    let proofs, result
+                    let failed = false
                     try {
-                        proof = await chainpoint.getProofs(proofHandle)
-                        if (proof.length == 1) {
-                            result = chpParse.parse(proof[0])
+                        proofs = await chainpoint.getProofs(proofHandles)
+                        proofs.forEach(proof => {
+                            result = chpParse.parse(proof)
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('cal_anchor_branch')){
-                                await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandle]);
-                            } else {
-                                this.callback(null, time, id, proof)
+                                failed = true
                             }
+                        })
+                        if (failed) {
+                            await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandles]);
+                        } else {
+                            this.callback(null, time, id, proofs)
                         }
-                        if (time - Date.parse(result.hash_received) > this.hourMs) {
-                            throw 'timed out attempting to retrieve calendar proof'
+                        if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
+                            throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
-                        this.callback(error, time, id, null)
+                        this.callback(error, time, id, proofs)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -53,24 +57,28 @@ export default class ChainpointConnector {
                 pluginOptions: {
                     JobLock: {reEnqueue: true},
                 },
-                perform: async (time, id, proofHandle) => {
-                    let proof, result
+                perform: async (time, id, proofHandles) => {
+                    let proofs, result
+                    let failed = false
                     try {
-                        proof = await chainpoint.getProofs(proofHandle)
-                        if (proof.length == 1) {
-                            result = chpParse.parse(proof[0])
+                        proofs = await chainpoint.getProofs(proofHandles)
+                        proofs.forEach(proof => {
+                            result = chpParse.parse(proof)
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
-                                await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandle]);
-                            } else {
-                                this.callback(null, time, id, proof)
+                                failed = true
                             }
+                        })
+                        if (failed) {
+                            await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandles]);
+                        } else {
+                            this.callback(null, time, id, proofs)
                         }
-                        if (time - Date.parse(result.hash_received) > this.dayMs) {
+                        if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.dayMs) {
                             throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
-                        this.callback(error, time, id, null)
+                        this.callback(error, time, id, proofs)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -159,18 +167,14 @@ export default class ChainpointConnector {
         this.callback = cb
     }
 
-    async submitHashes(hashesObj, cb) {
-
-    }
-
-    async submitHash(id, hash) {
-        let proofHandle
+    async submitHashes(id, hashes) {
+        let proofHandles
         try{
-           proofHandle = await chainpoint.submitHashes([hash])
+           proofHandles = await chainpoint.submitHashes(hashes)
         } catch (error) {
            cb(error, Date.now(), id, null)
         }
-        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandle]);
-        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandle]);
+        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandles]);
+        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandles]);
     }
 }
