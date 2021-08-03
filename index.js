@@ -33,8 +33,8 @@ export default class ChainpointConnector {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
                             try {
-                                console.log('proof ' + proof)
-                                result = chpParse.parse(proof)
+                                console.log('proof ' + proof.proof)
+                                result = chpParse.parse(proof.proof)
                                 console.log('result ' + result)
                                 let strResult = JSON.stringify(result)
                                 console.log('strResult ' + strResult)
@@ -71,7 +71,7 @@ export default class ChainpointConnector {
                     try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
-                            result = chpParse.parse(proof)
+                            result = chpParse.parse(proof.proof)
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
                                 failed = true
