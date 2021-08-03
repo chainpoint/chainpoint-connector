@@ -26,7 +26,7 @@ export default class ChainpointConnector {
                 pluginOptions: {
                     JobLock: {reEnqueue: true},
                 },
-                perform: async (time, id, proofHandle, callback) => {
+                perform: async (time, id, proofHandle) => {
                     let proof
                     try {
                         proof = await chainpoint.getProofs(proofHandles)
@@ -34,16 +34,16 @@ export default class ChainpointConnector {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('cal_anchor_branch')){
-                                await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandle, cb]);
+                                await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandle]);
                             } else {
-                                callback(null, time, id, proof)
+                                this.callback(null, time, id, proof)
                             }
                         }
                         if (time - Date.parse(result.hash_received) > this.hourMs) {
                             throw 'timed out attempting to retrieve calendar proof'
                         }
                     } catch(error){
-                        callback(error, time, id, null)
+                        this.callback(error, time, id, null)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -53,7 +53,7 @@ export default class ChainpointConnector {
                 pluginOptions: {
                     JobLock: {reEnqueue: true},
                 },
-                perform: async (time, id, proofHandle, callback) => {
+                perform: async (time, id, proofHandle) => {
                     let proof
                     try {
                         proof = await chainpoint.getProofs(proofHandles)
@@ -61,16 +61,16 @@ export default class ChainpointConnector {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
                             if (!strResult.includes('btc_anchor_branch')){
-                                await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandle, cb]);
+                                await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandle]);
                             } else {
-                                callback(null, time, id, proofs)
+                                this.callback(null, time, id, proofs)
                             }
                         }
                         if (time - Date.parse(result.hash_received) > this.dayMs) {
                             throw 'timed out attempting to retrieve btc proof'
                         }
                     } catch(error){
-                        callback(error, time, id, null)
+                        this.callback(error, time, id, null)
                         console.log(`error: ${error.message}`)
                     }
                 },
@@ -155,18 +155,22 @@ export default class ChainpointConnector {
         });
     }
 
+    setCallback(cb) {
+        this.callback = cb
+    }
+
     async submitHashes(hashesObj, cb) {
 
     }
 
-    async submitHash(id, hash, cb) {
+    async submitHash(id, hash) {
         let proofHandle
         try{
            proofHandle = await chainpoint.submitHashes([hash])
         } catch (error) {
            cb(error, Date.now(), id, null)
         }
-        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandle, cb]);
-        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandle, cb]);
+        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandle]);
+        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandle]);
     }
 }
