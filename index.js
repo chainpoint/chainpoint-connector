@@ -33,16 +33,13 @@ export default class ChainpointConnector {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
                             try {
-                                console.log('proof ' + proof.proof)
                                 result = chpParse.parse(proof.proof)
-                                console.log('result ' + result)
                                 let strResult = JSON.stringify(result)
-                                console.log('strResult ' + strResult)
                                 if (!strResult.includes('cal_anchor_branch')) {
                                     failed = true
                                 }
-                            } catch(error) {
-                                console.log('proofs error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
+                            } catch (error) {
+                                console.log('proof processing error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                             }
                         })
                         if (failed) {
@@ -71,10 +68,14 @@ export default class ChainpointConnector {
                     try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
-                            result = chpParse.parse(proof.proof)
-                            let strResult = JSON.stringify(result)
-                            if (!strResult.includes('btc_anchor_branch')){
-                                failed = true
+                            try {
+                                result = chpParse.parse(proof.proof)
+                                let strResult = JSON.stringify(result)
+                                if (!strResult.includes('btc_anchor_branch')){
+                                    failed = true
+                                }
+                            } catch (error) {
+                                console.log('proof processing error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                             }
                         })
                         if (failed) {
