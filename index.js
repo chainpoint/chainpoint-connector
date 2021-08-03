@@ -29,7 +29,7 @@ export default class ChainpointConnector {
                 perform: async (time, id, proofHandle) => {
                     let proof
                     try {
-                        proof = await chainpoint.getProofs(proofHandles)
+                        proof = await chainpoint.getProofs(proofHandle)
                         if (proof.length == 1) {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
@@ -56,7 +56,7 @@ export default class ChainpointConnector {
                 perform: async (time, id, proofHandle) => {
                     let proof
                     try {
-                        proof = await chainpoint.getProofs(proofHandles)
+                        proof = await chainpoint.getProofs(proofHandle)
                         if (proof.length == 1) {
                             let result = chpParse.parse(proof[0])
                             let strResult = JSON.stringify(result)
