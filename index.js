@@ -48,7 +48,7 @@ export default class ChainpointConnector {
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
-                        console.log(`error: ${error.message}`)
+                        console.log(`error: ${JSON.stringify(error.message)}`)
                     }
                 },
             },
@@ -79,7 +79,7 @@ export default class ChainpointConnector {
                         }
                     } catch(error){
                         this.callback(error, time, id, proofs)
-                        console.log(`error: ${error.message}`)
+                        console.log(`error: ${JSON.stringify(error.message)}`)
                     }
                 },
             },
