@@ -33,8 +33,11 @@ export default class ChainpointConnector {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
                             try {
+                                console.log('proof ' + proof)
                                 result = chpParse.parse(proof)
+                                console.log('result ' + result)
                                 let strResult = JSON.stringify(result)
+                                console.log('strResult ' + strResult)
                                 if (!strResult.includes('cal_anchor_branch')) {
                                     failed = true
                                 }
