@@ -29,6 +29,7 @@ export default class ChainpointConnector {
                 perform: async (time, id, proofHandles) => {
                     let proofs, result
                     let failed = false
+                    let type = "cal"
                     try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
@@ -45,14 +46,14 @@ export default class ChainpointConnector {
                         if (failed) {
                             await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandles]);
                         } else {
-                            this.callback(null, time, id, proofs)
+                            this.callback(null, time, id, type, proofs)
                             return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
                             throw new Error('timed out attempting to retrieve cal proof')
                         }
                     } catch(error){
-                        this.callback(error, time, id, proofs)
+                        this.callback(error, time, id, type, proofHandles)
                         console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                     }
                 },
@@ -65,6 +66,7 @@ export default class ChainpointConnector {
                 perform: async (time, id, proofHandles) => {
                     let proofs, result
                     let failed = false
+                    let type = "btc"
                     try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
@@ -81,14 +83,14 @@ export default class ChainpointConnector {
                         if (failed) {
                             await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandles]);
                         } else {
-                            this.callback(null, time, id, proofs)
+                            this.callback(null, time, id, type, proofs)
                             return
                         }
                         if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.dayMs) {
                             throw new Error('timed out attempting to retrieve btc proof')
                         }
                     } catch(error){
-                        this.callback(error, time, id, proofs)
+                        this.callback(error, time, id, type, proofHandles)
                         console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                     }
                 },
@@ -114,12 +116,12 @@ export default class ChainpointConnector {
         this.worker.on("cleaning_worker", (worker, pid) => {
             console.log(`cleaning old worker ${worker}`);
         });
-        this.worker.on("poll", (queue) => {
+/*        this.worker.on("poll", (queue) => {
             console.log(`worker polling ${queue}`);
         });
         this.worker.on("ping", (time) => {
             console.log(`worker check in @ ${time}`);
-        });
+        });*/
         this.worker.on("job", (queue, job) => {
             console.log(`working job ${queue} ${JSON.stringify(job)}`);
         });
@@ -141,9 +143,9 @@ export default class ChainpointConnector {
         this.worker.on("error", (error, queue, job) => {
             console.log(`error ${queue} ${JSON.stringify(job)}  >> ${error}`);
         });
-        this.worker.on("pause", () => {
+/*        this.worker.on("pause", () => {
             console.log("worker paused");
-        });
+        });*/
 
         this.scheduler.on("start", () => {
             console.log("scheduler started");
@@ -151,9 +153,9 @@ export default class ChainpointConnector {
         this.scheduler.on("end", () => {
             console.log("scheduler ended");
         });
-        this.scheduler.on("poll", () => {
+/*        this.scheduler.on("poll", () => {
             console.log("scheduler polling");
-        });
+        });*/
         this.scheduler.on("leader", () => {
             console.log("scheduler became leader");
         });
@@ -182,7 +184,7 @@ export default class ChainpointConnector {
         try{
            proofHandles = await chainpoint.submitHashes(hashes)
         } catch (error) {
-           cb(error, Date.now(), id, null)
+           this.callback(error, Date.now(), id, "", null)
         }
         await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandles]);
         await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandles]);
