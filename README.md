@@ -1,7 +1,7 @@
 # Chainpoint Connector
 
 Chainpoint Connector is an easy way to manage retrieval of proofs from the Chainpoint Network. 
-Because proof submission and retrieval from the blockchain is a highly asynchronous process, 
+Because proof submission and retrieval from the blockchain are highly asynchronous processes, 
 Connector is designed to queue up and execute callbacks when proofs become available. 
 
 ## Installation
