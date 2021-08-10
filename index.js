@@ -4,7 +4,7 @@ import chpParse from 'chainpoint-parse'
 
 export default class ChainpointConnector {
 
-    constructor(redisHost="redis", redisPort=6379, redisPassword=null, calWait=140000, btcWait=5400000) {
+    constructor(redisHost="redis", redisPort=6379, redisPassword=null, calWait=140, btcWait=5400) {
         this.connectionDetails = {
             pkg: "ioredis",
             host: redisHost,
@@ -13,30 +13,29 @@ export default class ChainpointConnector {
             database: 0,
             namespace: 'chp-resque',
         }
-        this.calendarWaitTime = calWait
-        this.btcWaitTime = btcWait
+        this.calendarWaitTime = calWait * 1000
+        this.btcWaitTime = btcWait * 1000
         this.hourMs = 3600000
         this.dayMs = 86400000
     }
 
     async connect(){
         this.jobs = {
-            getCalProof: {
+            getProof: {
                 plugins: [Plugins.JobLock],
                 pluginOptions: {
                     JobLock: {reEnqueue: true},
                 },
-                perform: async (time, id, proofHandles) => {
+                perform: async (time, id, type, proofHandles) => {
                     let proofs, result
                     let failed = false
-                    let type = "cal"
                     try {
                         proofs = await chainpoint.getProofs(proofHandles)
                         proofs.forEach(proof => {
                             try {
                                 result = chpParse.parse(proof.proof)
                                 let strResult = JSON.stringify(result)
-                                if (!strResult.includes('cal_anchor_branch')) {
+                                if (!strResult.includes(`${type}_anchor_branch`)){
                                     failed = true
                                 }
                             } catch (error) {
@@ -44,51 +43,20 @@ export default class ChainpointConnector {
                             }
                         })
                         if (failed) {
-                            await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [time, id, proofHandles]);
+                            await this.queue.enqueueIn((type == 'btc' ? this.btcWaitTime : this.calendarWaitTime), "chp", "getProof", [time, id, type, proofHandles]);
                         } else {
                             this.callback(null, time, id, type, proofs)
                             return
                         }
-                        if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.hourMs) {
-                            throw new Error('timed out attempting to retrieve cal proof')
-                        }
-                    } catch(error){
-                        this.callback(error, time, id, type, proofHandles)
-                        console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
-                    }
-                },
-            },
-            getBtcProof: {
-                plugins: [Plugins.JobLock],
-                pluginOptions: {
-                    JobLock: {reEnqueue: true},
-                },
-                perform: async (time, id, proofHandles) => {
-                    let proofs, result
-                    let failed = false
-                    let type = "btc"
-                    try {
-                        proofs = await chainpoint.getProofs(proofHandles)
-                        proofs.forEach(proof => {
-                            try {
-                                result = chpParse.parse(proof.proof)
-                                let strResult = JSON.stringify(result)
-                                if (!strResult.includes('btc_anchor_branch')){
-                                    failed = true
-                                }
-                            } catch (error) {
-                                console.log('proof processing error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
+                        if (result.hasOwnProperty('hash_received')) {
+                            if (type == 'btc' && time - Date.parse(result.hash_received) > this.dayMs) {
+                                throw new Error('timed out attempting to retrieve proof')
                             }
-                        })
-                        if (failed) {
-                            await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [time, id, proofHandles]);
-                        } else {
-                            this.callback(null, time, id, type, proofs)
-                            return
+                            if (type == 'cal' && time - Date.parse(result.hash_received) > this.hourMs) {
+                                throw new Error('timed out attempting to retrieve cal proof')
+                            }
                         }
-                        if (result.hasOwnProperty('hash_received') && time - Date.parse(result.hash_received) > this.dayMs) {
-                            throw new Error('timed out attempting to retrieve btc proof')
-                        }
+
                     } catch(error){
                         this.callback(error, time, id, type, proofHandles)
                         console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
@@ -186,7 +154,7 @@ export default class ChainpointConnector {
         } catch (error) {
            this.callback(error, Date.now(), id, "", null)
         }
-        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getCalProof", [Date.now(), id, proofHandles]);
-        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getBtcProof", [Date.now(), id, proofHandles]);
+        await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getProof", [Date.now(), id, 'cal', proofHandles]);
+        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getProof", [Date.now(), id, 'btc', proofHandles]);
     }
 }
