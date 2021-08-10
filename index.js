@@ -27,6 +27,7 @@ export default class ChainpointConnector {
                     JobLock: {reEnqueue: true},
                 },
                 perform: async (time, id, type, proofHandles) => {
+                    console.log(`running ${type} retrieval for id ${id}`)
                     let proofs, result
                     let failed = false
                     try {
@@ -45,18 +46,17 @@ export default class ChainpointConnector {
                         if (failed) {
                             await this.queue.enqueueIn((type == 'btc' ? this.btcWaitTime : this.calendarWaitTime), "chp", "getProof", [time, id, type, proofHandles]);
                         } else {
+                            console.log('queuing up btc proof retrieval')
+                            await this.queue.enqueueIn(this.btcWaitTime, "chp", "getProof", [Date.now(), id, 'btc', proofHandles]); // schedule btc retrieval
                             this.callback(null, time, id, type, proofs)
                             return
                         }
-                        if (result.hasOwnProperty('hash_received')) {
-                            if (type == 'btc' && time - Date.parse(result.hash_received) > this.dayMs) {
-                                throw new Error('timed out attempting to retrieve proof')
-                            }
-                            if (type == 'cal' && time - Date.parse(result.hash_received) > this.hourMs) {
-                                throw new Error('timed out attempting to retrieve cal proof')
-                            }
+                        if (type == 'btc' && time - Date.now() > this.dayMs) {
+                            throw new Error('timed out attempting to retrieve proof')
                         }
-
+                        if (type == 'cal' && time - Date.now() > this.hourMs) {
+                            throw new Error('timed out attempting to retrieve cal proof')
+                        }
                     } catch(error){
                         this.callback(error, time, id, type, proofHandles)
                         console.log('error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
@@ -155,6 +155,5 @@ export default class ChainpointConnector {
            this.callback(error, Date.now(), id, "", null)
         }
         await this.queue.enqueueIn(this.calendarWaitTime, "chp", "getProof", [Date.now(), id, 'cal', proofHandles]);
-        await this.queue.enqueueIn(this.btcWaitTime, "chp", "getProof", [Date.now(), id, 'btc', proofHandles]);
     }
 }
