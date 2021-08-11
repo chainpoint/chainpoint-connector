@@ -12,6 +12,8 @@ or, if you want the latest fixes,
 
 `npm install https://github.com/chainpoint/chainpoint-connector --save-prod`
 
+This library is an ECMAscript module and must be used with import-from syntax.
+
 ## Usage
 
 Connector uses redis as a persistent datastore. After connecting with redis and 
@@ -22,7 +24,7 @@ the proof results when they arrive. The callback is passed the following paramet
 - `time` (ms)
 - an optional `id` that can be added to allow your system to identify a proof when retrieved
 - the `type` of proof (cal or btc, standing for calendar or bitcoin anchor)
-- the proof returned by the Chainpoint Network
+- the `proof` returned by the Chainpoint Network
 
 Example:
 ```javascript
