@@ -40,10 +40,12 @@ export default class ChainpointConnector {
                                     failed = true
                                 }
                             } catch (error) {
+                                failed = true
                                 console.log('proof processing error: ' + JSON.stringify(error, ["message", "arguments", "type", "name"]));
                             }
                         })
                         if (failed) {
+                            console.log(`proof processing error: ${JSON.stringify(proof)}`)
                             await this.queue.enqueueIn((type == 'btc' ? this.btcWaitTime : this.calendarWaitTime), "chp", "getProof", [time, id, type, proofHandles]);
                         } else {
                             console.log('queuing up btc proof retrieval')
